@@ -1,3 +1,4 @@
+from cgitb import text
 from tkinter import *
 import pandas
 import random
@@ -10,6 +11,9 @@ try :
 except FileNotFoundError:
     data = pandas.read_csv("data/French_words.csv")
     data_dict = data.to_dict(orient='records')
+except pandas.errors.EmptyDataError:
+    data = pandas.read_csv("data/French_words.csv")
+    data_dict = data.to_dict(orient='records')
 
 else:
     data_dict = data.to_dict(orient='records')
@@ -18,11 +22,17 @@ new_word = {}
 def change_word():
     global new_word,timer,data_dict
     screen.after_cancel(timer)
-    new_word = random.choice(data_dict)
-    changing_text = new_word['French']
-    canva.itemconfig(word,text = changing_text,fill = 'white')
-    canva.itemconfig(title,text = "French",fill = 'white')
-    canva.itemconfig(front,image = front_card)
+    try :
+        new_word = random.choice(data_dict)
+    
+    except IndexError:
+        ennd()
+        
+    else:
+        changing_text = new_word['French']
+        canva.itemconfig(word,text = changing_text,fill = 'white')
+        canva.itemconfig(title,text = "French",fill = 'white')
+        canva.itemconfig(front,image = front_card)
     timer = screen.after(3000,func=flip)    
 
 
@@ -34,11 +44,19 @@ def flip():
     
     
 # -----------------------------------saving the details--------------------------
+def ennd():
+    screen.after_cancel(timer)
+    canva.itemconfig(word,text="You have learned 100 words")
+    canva.itemconfig(title,text="Congrats !")
+    pass
 def is_known():
     global new_word
-    data_dict.remove(new_word)
+    try :
+        data_dict.remove(new_word)
+    except ValueError:
+        ennd()
     changedict = pandas.DataFrame(data_dict)
-    changedict.to_csv('data/stillunknownwords.csv')
+    changedict.to_csv('data/stillunknownwords.csv' , index=False)
     change_word()
 # --------------------------------- UI --------------------------------
 screen = Tk()
