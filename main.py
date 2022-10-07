@@ -2,22 +2,28 @@ from tkinter import *
 import pandas
 import random
 BACKGROUND_COLOR = "#B1DDC6"
-
+data_dict = {}
 # ------------- reading from csv file and displaying on the card----------------
+try :
+    data = pandas.read_csv("data/stillunknownwords.csv")
 
-data = pandas.read_csv("data/french_words.csv")
-data_dict = data.to_dict(orient='records')
+except FileNotFoundError:
+    data = pandas.read_csv("data/French_words.csv")
+    data_dict = data.to_dict(orient='records')
+
+else:
+    data_dict = data.to_dict(orient='records')
 
 new_word = {}
 def change_word():
-    global new_word,timer
+    global new_word,timer,data_dict
     screen.after_cancel(timer)
     new_word = random.choice(data_dict)
     changing_text = new_word['French']
     canva.itemconfig(word,text = changing_text,fill = 'white')
     canva.itemconfig(title,text = "French",fill = 'white')
     canva.itemconfig(front,image = front_card)
-    screen.after(3000,func=flip)    
+    timer = screen.after(3000,func=flip)    
 
 
 # --------------------------------- fliping card --------------------------------
@@ -27,7 +33,13 @@ def flip():
     canva.itemconfig(title,text = "English",fill = 'black')
     
     
-# ---------------------------------  --------------------------------
+# -----------------------------------saving the details--------------------------
+def is_known():
+    global new_word
+    data_dict.remove(new_word)
+    changedict = pandas.DataFrame(data_dict)
+    changedict.to_csv('data/stillunknownwords.csv')
+    change_word()
 # --------------------------------- UI --------------------------------
 screen = Tk()
 screen.title('Lingo Tutor')
@@ -47,7 +59,7 @@ canva.grid(row=1,column=1,columnspan=2)
 
 # image buttons 
 right_img = PhotoImage(file='images/right.png')
-right = Button(image=right_img , highlightthickness=0 , command=change_word)
+right = Button(image=right_img , highlightthickness=0 , command=is_known)
 
 wrong_img = PhotoImage(file='images/wrong.png')
 wrong = Button(image=wrong_img,command= change_word)
